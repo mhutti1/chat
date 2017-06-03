@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  tools:context="mhutti1.eu.chat.ConversationActivity">
+
+  <ListView
+    android:id="@+id/conversation"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentStart="true"
+    android:layout_alignParentTop="true"
+    android:transcriptMode="alwaysScroll"
+    android:layout_above="@+id/message_box" />
+
+  <android.support.design.widget.TextInputLayout
+    android:id="@+id/message_box"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true">
+
+    <EditText
+      android:layout_width="match_parent"
+      android:inputType="text"
+      android:imeOptions="actionSend"
+      android:layout_height="wrap_content"
+      android:hint="hint" />
+  </android.support.design.widget.TextInputLayout>
+</RelativeLayout>

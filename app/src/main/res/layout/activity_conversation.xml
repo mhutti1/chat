@@ -10,11 +10,12 @@
     android:id="@+id/conversation"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_above="@+id/message_box"
     android:layout_alignParentLeft="true"
     android:layout_alignParentStart="true"
     android:layout_alignParentTop="true"
-    android:transcriptMode="alwaysScroll"
-    android:layout_above="@+id/message_box" />
+    android:divider="@null"
+    android:transcriptMode="alwaysScroll" />
 
   <android.support.design.widget.TextInputLayout
     android:id="@+id/message_box"

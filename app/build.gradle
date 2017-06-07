@@ -11,7 +11,7 @@ android {
   buildToolsVersion "25.0.2"
   defaultConfig {
     applicationId "eu.mhutti1.chat"
-    minSdkVersion 14
+    minSdkVersion 15
     targetSdkVersion 25
     versionCode 1
     versionName "1.0"
@@ -21,6 +21,10 @@ android {
     release {
       minifyEnabled false
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+      manifestPlaceholders = ['redirectUriScheme': 'chat://easyauth.callback']
+    }
+    debug {
+      manifestPlaceholders = ['redirectUriScheme': 'chat://easyauth.callback']
     }
   }
 }
@@ -37,6 +41,6 @@ dependencies {
   compile 'com.microsoft.azure:azure-mobile-android:3.3.0', {
     exclude group: 'com.android.support', module: 'customtabs'
   }
-
+  compile 'com.android.support:customtabs:25.3.1'
   testCompile 'junit:junit:4.12'
 }

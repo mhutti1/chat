@@ -26,7 +26,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.windowsazure.mobileservices.MobileServiceActivityResult;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
+import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -35,10 +38,14 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+  private MobileServiceTable<TodoItem> mToDoTable;
+
   private MobileServiceClient mClient;
   public static final String MESSAGE_USERNAME = "eu.mhutti1.chat.MESSAGE_USERNAME";
   List<String> conversations = new ArrayList<>();
   ArrayAdapter<String> conversationAdapter;
+
+  public static final int MICROSOFT_LOGIN_REQUEST_CODE = 1;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
     setContentView(R.layout.activity_main);
     Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
-
 
     try {
       mClient = new MobileServiceClient(
@@ -56,6 +62,27 @@ public class MainActivity extends AppCompatActivity {
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }
+
+
+    if (Utils.myId(this).equals("----")) {
+      authenticate();
+    } else {
+      ListView listView = (ListView) findViewById(R.id.conversation_list);
+      conversationAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, conversations);
+      listView.setAdapter(conversationAdapter);
+      listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+          openConversation(conversationAdapter.getItem(i));
+        }
+      });
+
+     // new LoadPeople().execute();
+    }
+  }
+
+  public void loadTodo() {
+
 
     TodoItem item = new TodoItem();
     item.Text = "Awesome item";
@@ -73,22 +100,6 @@ public class MainActivity extends AppCompatActivity {
         toast.show();
       }
     });
-
-    if (Utils.myId(this).equals("----")) {
-      showRegisterDialog();
-    } else {
-      ListView listView = (ListView) findViewById(R.id.conversation_list);
-      conversationAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, conversations);
-      listView.setAdapter(conversationAdapter);
-      listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-          openConversation(conversationAdapter.getItem(i));
-        }
-      });
-
-     // new LoadPeople().execute();
-    }
   }
 
   public class TodoItem {
@@ -96,21 +107,34 @@ public class MainActivity extends AppCompatActivity {
     public String Text;
   }
 
-  public void showRegisterDialog() {
-    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setTitle("Please enter a username");
-    final EditText input = new EditText(this);
-    input.setInputType(InputType.TYPE_CLASS_TEXT);
-    builder.setView(input);
-    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-      @Override
-      public void onClick(DialogInterface dialog, int which) {
-      //  new RegisterUser().execute(input.getText().toString());
-      }
-    });
 
-    builder.show();
+  private void authenticate() {
+    // Login using the Microsoft provider.
+    mClient.login("MicrosoftAccount", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
   }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    // When request completes
+    if (resultCode == RESULT_OK) {
+      // Check the request code matches the one we send in the login request
+      if (requestCode == MICROSOFT_LOGIN_REQUEST_CODE) {
+        MobileServiceActivityResult result = mClient.onActivityResult(data);
+        String text = "";
+        if (result.isLoggedIn()) {
+          // login succeeded
+          text = String.format("You are now logged in - %1$2s", mClient.getCurrentUser().getUserId());
+          loadTodo();
+        } else {
+          // login failed, check the error message
+          text = result.getErrorMessage();
+        }
+        Toast toast = Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT);
+        toast.show();
+      }
+    }
+  }
+
 
   private void openConversation(String username) {
     Intent intent = new Intent(this, ConversationActivity.class);

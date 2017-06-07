@@ -27,6 +27,19 @@
       </intent-filter>
     </activity>
     <activity android:name=".ConversationActivity"></activity>
+
+    <activity android:name="com.microsoft.windowsazure.mobileservices.authentication.RedirectUrlActivity">
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="chat"
+          android:host="easyauth.callback"/>
+      </intent-filter>
+    </activity>
+
+    <activity android:name="com.microsoft.windowsazure.mobileservices.authentication.CustomTabsIntermediateActivity" android:exported="false" />
+    <activity android:name="com.microsoft.windowsazure.mobileservices.authentication.CustomTabsLoginActivity" android:exported="false" android:launchMode="singleTask" />
   </application>
 
 </manifest>

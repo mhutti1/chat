@@ -1,4 +1,4 @@
-package mhutti1.eu.chat;
+package eu.mhutti1.chat;
 
 import org.junit.Test;
 

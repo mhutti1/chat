@@ -4,7 +4,7 @@
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  tools:context="mhutti1.eu.chat.MainActivity">
+  tools:context="eu.mhutti1.chat.MainActivity">
 
   <android.support.design.widget.AppBarLayout
     android:layout_width="match_parent"

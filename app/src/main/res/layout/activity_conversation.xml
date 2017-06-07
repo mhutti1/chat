@@ -4,7 +4,7 @@
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  tools:context="mhutti1.eu.chat.ConversationActivity">
+  tools:context="eu.mhutti1.chat.ConversationActivity">
 
   <ListView
     android:id="@+id/conversation"

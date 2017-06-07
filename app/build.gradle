@@ -1,10 +1,16 @@
 apply plugin: 'com.android.application'
 
+buildscript {
+  repositories {
+    jcenter()
+  }
+}
+
 android {
   compileSdkVersion 25
   buildToolsVersion "25.0.2"
   defaultConfig {
-    applicationId "mhutti1.eu.chat"
+    applicationId "eu.mhutti1.chat"
     minSdkVersion 14
     targetSdkVersion 25
     versionCode 1
@@ -30,7 +36,7 @@ dependencies {
 
   compile 'com.squareup.okhttp3:okhttp:3.8.0'
   compile 'com.google.code.gson:gson:2.8.0'
-
+  compile 'com.google.guava:guava:20.0'
 
   testCompile 'junit:junit:4.12'
 }

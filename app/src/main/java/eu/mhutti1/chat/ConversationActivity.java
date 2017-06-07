@@ -22,13 +22,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+
 
 public class ConversationActivity extends AppCompatActivity {
 
-  OkHttpClient client = new OkHttpClient();
   final List<Message> conversation = new ArrayList<>();
   ChatAdapter conversationAdapter;
   String username;
@@ -53,73 +50,16 @@ public class ConversationActivity extends AppCompatActivity {
         if (i == EditorInfo.IME_ACTION_SEND) {
           conversation.add(new Message(Utils.myId(getApplicationContext()), "", textView.getText().toString()));
           conversationAdapter.notifyDataSetChanged();
-          new PostMessage().execute(textView.getText().toString());
+         // new PostMessage().execute(textView.getText().toString());
           textView.setText("");
           return true;
         }
         return false;
       }
     });
-    new LoadMessages().execute();
+    //new LoadMessages().execute();
 
   }
 
 
-
-
-  class LoadMessages extends AsyncTask<Void, Void, Void> {
-    @Override
-    protected Void doInBackground(Void... voids) {
-      try {
-        String json = request("http://mhutti1.eu/getmessages.php?r=" + username + "&s=" + Utils.myId(getApplicationContext()));
-        Gson gson = new GsonBuilder().create();
-        List<Message> messages = gson.fromJson(json, new TypeToken<List<Message>>() {
-        }.getType());
-        conversation.addAll(messages);
-
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      return null;
-    }
-
-    String request(String url) throws IOException {
-      Request request = new Request.Builder()
-          .url(url)
-          .build();
-
-      Response response = client.newCall(request).execute();
-      return response.body().string();
-    }
-
-    @Override
-    protected void onPostExecute(Void unused) {
-      conversationAdapter.notifyDataSetChanged();
-    }
-  }
-
-  class PostMessage extends AsyncTask<String, Void, Void> {
-    @Override
-    protected Void doInBackground(String... strings) {
-      try {
-        request("http://mhutti1.eu/postmessage.php?r=" + username + "&s=" + Utils.myId(getApplicationContext()) + "&t=" + strings[0]);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      return null;
-    }
-
-    @Override
-    protected void onPostExecute(Void unused) {
-      conversationAdapter.notifyDataSetChanged();
-    }
-
-    void request(String url) throws IOException {
-      Request request = new Request.Builder()
-          .url(url)
-          .build();
-
-      client.newCall(request).execute();
-    }
-  }
 }

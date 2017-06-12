@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
   private MobileServiceTable<TodoItem> mToDoTable;
 
-  private MobileServiceClient mClient;
+  public static MobileServiceClient mClient;
   public static final String MESSAGE_AUTH = "eu.mhutti1.chat.MESSAGE_AUTH";
   public static final String MESSAGE_NICK = "eu.mhutti1.chat.MESSAGE_NICK";
   public static final String USERIDPREF = "uid";
@@ -204,9 +204,23 @@ public class MainActivity extends AppCompatActivity {
 
   private void authenticate() {
     if (!loadUserTokenCache(mClient)) {
-      // Login using the Microsoft provider.
-      mClient.login("MicrosoftAccount", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
-      //mClient.login("Google", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
+      AlertDialog.Builder builder = new AlertDialog.Builder(this);
+      builder.setTitle("Sign In");
+      builder.setCancelable(false);
+      builder.setPositiveButton("Microsoft", new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+          mClient.login("MicrosoftAccount", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
+
+        }
+      });
+      builder.setNegativeButton("Google", new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+          mClient.login("Google", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
+        }
+      });
+      builder.show();
     } {
       loadUsers();
     }

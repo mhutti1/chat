@@ -2,11 +2,9 @@ package eu.mhutti1.chat;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -23,15 +21,12 @@ import android.widget.Toast;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import com.microsoft.windowsazure.mobileservices.MobileServiceActivityResult;
 import com.microsoft.windowsazure.mobileservices.MobileServiceClient;
+import com.microsoft.windowsazure.mobileservices.MobileServiceList;
+import com.microsoft.windowsazure.mobileservices.authentication.MobileServiceUser;
 import com.microsoft.windowsazure.mobileservices.table.MobileServiceTable;
-import com.microsoft.windowsazure.mobileservices.table.sync.MobileServiceSyncTable;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,9 +36,16 @@ public class MainActivity extends AppCompatActivity {
   private MobileServiceTable<TodoItem> mToDoTable;
 
   private MobileServiceClient mClient;
-  public static final String MESSAGE_USERNAME = "eu.mhutti1.chat.MESSAGE_USERNAME";
-  List<String> conversations = new ArrayList<>();
-  ArrayAdapter<String> conversationAdapter;
+  public static final String MESSAGE_AUTH = "eu.mhutti1.chat.MESSAGE_AUTH";
+  public static final String MESSAGE_NICK = "eu.mhutti1.chat.MESSAGE_NICK";
+  public static final String USERIDPREF = "uid";
+  public static final String TOKENPREF = "tkn";
+  public static final String NICKNAMEPREF = "nik";
+  private String authId;
+
+
+  List<User> conversations = new ArrayList<>();
+  ArrayAdapter<User> conversationAdapter;
 
   public static final int MICROSOFT_LOGIN_REQUEST_CODE = 1;
 
@@ -63,35 +65,119 @@ public class MainActivity extends AppCompatActivity {
       e.printStackTrace();
     }
 
+    ListView listView = (ListView) findViewById(R.id.conversation_list);
+    conversationAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, conversations);
+    listView.setAdapter(conversationAdapter);
+    listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+      @Override
+      public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+        openConversation(conversationAdapter.getItem(i));
+      }
+    });
 
     if (Utils.myId(this).equals("----")) {
       authenticate();
-    } else {
-      ListView listView = (ListView) findViewById(R.id.conversation_list);
-      conversationAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, conversations);
-      listView.setAdapter(conversationAdapter);
-      listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-          openConversation(conversationAdapter.getItem(i));
-        }
-      });
-
-     // new LoadPeople().execute();
     }
   }
 
-  public void loadTodo() {
-
-
-    TodoItem item = new TodoItem();
-    item.Text = "Awesome item";
-    ListenableFuture<TodoItem> future = mClient.getTable(TodoItem.class).insert(item);
-    Futures.addCallback(future, new FutureCallback<TodoItem>() {
+  public void loadUsers() {
+    ListenableFuture<MobileServiceList<User>> future = mClient.getTable(User.class).select().execute();
+    Futures.addCallback(future, new FutureCallback<MobileServiceList<User>>() {
       @Override
-      public void onSuccess(TodoItem result) {
-        Toast toast = Toast.makeText(getApplicationContext(), "success", Toast.LENGTH_SHORT);
+      public void onSuccess(MobileServiceList<User> result) {
+        for (User user : result) {
+          if (!user.authID.equals(authId)) {
+            conversations.add(user);
+          }
+        }
+        conversationAdapter.notifyDataSetChanged();
+      }
+
+      @Override
+      public void onFailure(Throwable t) {
+        Toast toast = Toast.makeText(getApplicationContext(), "failure", Toast.LENGTH_SHORT);
         toast.show();
+      }
+    });
+  }
+
+  public void lookUpUser() {
+    ListenableFuture<MobileServiceList<User>> future = mClient.getTable(User.class)
+        .select().field("AUTHID").eq(mClient.getCurrentUser().getUserId()).execute();
+    Futures.addCallback(future, new FutureCallback<MobileServiceList<User>>() {
+      @Override
+      public void onSuccess(MobileServiceList<User> result) {
+        if (result.isEmpty()) {
+          registerUser();
+        } else {
+          cacheUserToken(mClient.getCurrentUser(), result.get(0).nickname);
+          loadUsers();
+        }
+      }
+
+      @Override
+      public void onFailure(Throwable t) {
+        Toast toast = Toast.makeText(getApplicationContext(), "failure", Toast.LENGTH_SHORT);
+        toast.show();
+      }
+    });
+  }
+
+  private void cacheUserToken(MobileServiceUser user, String nickname) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    SharedPreferences.Editor editor = prefs.edit();
+    editor.putString(USERIDPREF, user.getUserId());
+    editor.putString(TOKENPREF, user.getAuthenticationToken());
+    editor.putString(NICKNAMEPREF, nickname);
+    authId = user.getUserId();
+    editor.commit();
+  }
+
+  private boolean loadUserTokenCache(MobileServiceClient client) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+    String userId = prefs.getString(USERIDPREF, null);
+    if (userId == null)
+      return false;
+    String token = prefs.getString(TOKENPREF, null);
+    if (token == null)
+      return false;
+
+    MobileServiceUser user = new MobileServiceUser(userId);
+    user.setAuthenticationToken(token);
+    client.setCurrentUser(user);
+    authId = prefs.getString(NICKNAMEPREF, null);
+
+    return true;
+  }
+
+  public void registerUser() {
+    final User item = new User();
+    item.authID = mClient.getCurrentUser().getUserId();
+    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle("Input a nickname");
+
+    final EditText input = new EditText(this);
+    input.setInputType(InputType.TYPE_CLASS_TEXT);
+    builder.setView(input);
+    builder.setCancelable(false);
+    builder.setPositiveButton("Create", new DialogInterface.OnClickListener() {
+      @Override
+      public void onClick(DialogInterface dialog, int which) {
+        item.nickname = input.getText().toString();
+        saveNewUser(item);
+      }
+    });
+
+    builder.show();
+  }
+
+  public void saveNewUser(final User user) {
+    ListenableFuture<User> future = mClient.getTable(User.class).insert(user);
+    Futures.addCallback(future, new FutureCallback<User>() {
+      @Override
+      public void onSuccess(User result) {
+        authId = user.authID;
+        loadUsers();
       }
 
       @Override
@@ -107,10 +193,24 @@ public class MainActivity extends AppCompatActivity {
     public String Text;
   }
 
+  public class User {
+    public String Id;
+    public String authID;
+    public String nickname;
+
+    @Override
+    public String toString() {
+      return nickname;
+    }
+  }
 
   private void authenticate() {
-    // Login using the Microsoft provider.
-    mClient.login("MicrosoftAccount", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
+    if (!loadUserTokenCache(mClient)) {
+      // Login using the Microsoft provider.
+      mClient.login("MicrosoftAccount", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
+      //mClient.login("Google", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
+
+    }
   }
 
   @Override
@@ -124,7 +224,8 @@ public class MainActivity extends AppCompatActivity {
         if (result.isLoggedIn()) {
           // login succeeded
           text = String.format("You are now logged in - %1$2s", mClient.getCurrentUser().getUserId());
-          loadTodo();
+          mClient.getCurrentUser();
+          lookUpUser();
         } else {
           // login failed, check the error message
           text = result.getErrorMessage();
@@ -136,9 +237,10 @@ public class MainActivity extends AppCompatActivity {
   }
 
 
-  private void openConversation(String username) {
+  private void openConversation(User user) {
     Intent intent = new Intent(this, ConversationActivity.class);
-    intent.putExtra(MESSAGE_USERNAME, username);
+    intent.putExtra(MESSAGE_AUTH, user.authID);
+    intent.putExtra(MESSAGE_NICK, user.nickname);
     startActivity(intent);
   }
 

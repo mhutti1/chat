@@ -11,6 +11,6 @@ import android.telephony.TelephonyManager;
 public class Utils {
 
   public static String myId(Context context) {
-    return PreferenceManager.getDefaultSharedPreferences(context).getString("NAME", "----");
+    return PreferenceManager.getDefaultSharedPreferences(context).getString(MainActivity.USERIDPREF, "----");
   }
 }

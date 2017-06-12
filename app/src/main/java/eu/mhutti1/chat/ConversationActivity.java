@@ -1,24 +1,23 @@
 package eu.mhutti1.chat;
 
-import android.content.DialogInterface;
-import android.os.AsyncTask;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.microsoft.windowsazure.mobileservices.MobileServiceList;
+import com.microsoft.windowsazure.mobileservices.table.query.ExecutableQuery;
+import com.microsoft.windowsazure.mobileservices.table.query.Query;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,16 +27,19 @@ public class ConversationActivity extends AppCompatActivity {
 
   final List<Message> conversation = new ArrayList<>();
   ChatAdapter conversationAdapter;
-  String username;
+  String remoteNickname;
+  String remoteId;
+  String localId;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_conversation);
-    String username = getIntent().getStringExtra(MainActivity.MESSAGE_NICK);
+    remoteNickname = getIntent().getStringExtra(MainActivity.MESSAGE_NICK);
+    remoteId = getIntent().getStringExtra(MainActivity.MESSAGE_AUTH);
+    localId = Utils.myId(getApplicationContext());
     ActionBar actionBar = getSupportActionBar();
-    actionBar.setTitle(username);
-    this.username = username;
+    actionBar.setTitle(remoteNickname);
 
 
     ListView conversationListView = (ListView) findViewById(R.id.conversation);
@@ -48,18 +50,57 @@ public class ConversationActivity extends AppCompatActivity {
       @Override
       public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
         if (i == EditorInfo.IME_ACTION_SEND) {
-          conversation.add(new Message(Utils.myId(getApplicationContext()), "", textView.getText().toString()));
+          Message message = new Message(localId, remoteId, textView.getText().toString());
+          conversation.add(message);
           conversationAdapter.notifyDataSetChanged();
-         // new PostMessage().execute(textView.getText().toString());
+          postMessage(message);
           textView.setText("");
           return true;
         }
         return false;
       }
     });
-    //new LoadMessages().execute();
+    loadMessages();
 
   }
 
+  public void postMessage(final Message message) {
+    ListenableFuture<Message> future = MainActivity.mClient.getTable(Message.class).insert(message);
+    Futures.addCallback(future, new FutureCallback<Message>() {
+      @Override
+      public void onSuccess(Message result) {
+      }
+
+      @Override
+      public void onFailure(Throwable t) {
+        Toast toast = Toast.makeText(getApplicationContext(), "failure", Toast.LENGTH_SHORT);
+        toast.show();
+      }
+    });
+  }
+
+  public void loadMessages() {
+    ExecutableQuery from =
+        new ExecutableQuery<>().field("SENDER").eq(remoteId).and().field("RECIPIENT").eq(localId);
+    ExecutableQuery to =
+        new ExecutableQuery<>().field("SENDER").eq(localId).and().field("RECIPIENT").eq(remoteId);
+    ListenableFuture<MobileServiceList<Message>> future = MainActivity.mClient
+        .getTable(Message.class).execute(from.or(to));
+    Futures.addCallback(future, new FutureCallback<MobileServiceList<Message>>() {
+      @Override
+      public void onSuccess(MobileServiceList<Message> result) {
+        for (Message message : result) {
+          conversation.add(message);
+        }
+        conversationAdapter.notifyDataSetChanged();
+      }
+
+      @Override
+      public void onFailure(Throwable t) {
+        Toast toast = Toast.makeText(getApplicationContext(), "failure", Toast.LENGTH_SHORT);
+        toast.show();
+      }
+    });
+  }
 
 }

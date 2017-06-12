@@ -7,15 +7,14 @@ import java.util.Date;
  */
 
 public class Message {
-  public final String sender;
-  public final String recipient;
-  public final String time;
-  public final String text;
+  public String id;
+  public String sender;
+  public String recipient;
+  public String text;
 
   public Message(String sender, String recipient, String text) {
     this.sender = sender;
     this.recipient = recipient;
     this.text = text;
-    this.time = String.valueOf(new Date().getTime());
   }
 }

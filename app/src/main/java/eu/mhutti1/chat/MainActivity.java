@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     MobileServiceUser user = new MobileServiceUser(userId);
     user.setAuthenticationToken(token);
     client.setCurrentUser(user);
-    authId = prefs.getString(NICKNAMEPREF, null);
+    authId = userId;
 
     return true;
   }
@@ -207,7 +207,8 @@ public class MainActivity extends AppCompatActivity {
       // Login using the Microsoft provider.
       mClient.login("MicrosoftAccount", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
       //mClient.login("Google", "chat", MICROSOFT_LOGIN_REQUEST_CODE);
-
+    } {
+      loadUsers();
     }
   }
 

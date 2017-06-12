@@ -75,9 +75,7 @@ public class MainActivity extends AppCompatActivity {
       }
     });
 
-    if (Utils.myId(this).equals("----")) {
-      authenticate();
-    }
+    authenticate();
   }
 
   public void loadUsers() {

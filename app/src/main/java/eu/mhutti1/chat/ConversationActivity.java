@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.microsoft.windowsazure.mobileservices.MobileServiceList;
 import com.microsoft.windowsazure.mobileservices.table.query.ExecutableQuery;
 import com.microsoft.windowsazure.mobileservices.table.query.Query;
+import com.microsoft.windowsazure.notifications.NotificationsManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,21 +26,25 @@ import java.util.List;
 
 public class ConversationActivity extends AppCompatActivity {
 
-  final List<Message> conversation = new ArrayList<>();
-  ChatAdapter conversationAdapter;
+  public static final String SENDER_ID = "22693517818";
+
+  public static List<Message> conversation = new ArrayList<>();
+  public static ChatAdapter conversationAdapter;
   String remoteNickname;
-  String remoteId;
-  String localId;
+  public static String remoteId;
+  public static String localId;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    conversation.clear();
     setContentView(R.layout.activity_conversation);
     remoteNickname = getIntent().getStringExtra(MainActivity.MESSAGE_NICK);
     remoteId = getIntent().getStringExtra(MainActivity.MESSAGE_AUTH);
     localId = Utils.myId(getApplicationContext());
     ActionBar actionBar = getSupportActionBar();
     actionBar.setTitle(remoteNickname);
+    NotificationsManager.handleNotifications(this, SENDER_ID, PushHandler.class);
 
 
     ListView conversationListView = (ListView) findViewById(R.id.conversation);

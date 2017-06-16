@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }
-
     ListView listView = (ListView) findViewById(R.id.conversation_list);
     conversationAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, conversations);
     listView.setAdapter(conversationAdapter);

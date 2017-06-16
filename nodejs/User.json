@@ -1,0 +1,18 @@
+{
+	  "softDelete" : true,
+	  "autoIncrement": false,
+  "insert": {
+    "access": "authenticated"
+  },
+  "update": {
+    "access": "authenticated"
+  },
+  "delete": {
+    "access": "authenticated"
+  },
+  "read": {
+    "access": "authenticated"
+  },
+  "undelete": {
+    "access": "authenticated"
+  }}

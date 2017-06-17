@@ -43,9 +43,8 @@ public class ConversationActivity extends AppCompatActivity {
     remoteId = getIntent().getStringExtra(MainActivity.MESSAGE_AUTH);
     localId = Utils.myId(getApplicationContext());
     ActionBar actionBar = getSupportActionBar();
-    actionBar.setTitle(remoteNickname);
+    actionBar.setTitle(remoteNickname); // Set title to conversation partners nickname
     NotificationsManager.handleNotifications(this, SENDER_ID, PushHandler.class);
-
 
     ListView conversationListView = (ListView) findViewById(R.id.conversation);
     conversationAdapter = new ChatAdapter(this, android.R.layout.simple_list_item_1, conversation);

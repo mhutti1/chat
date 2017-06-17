@@ -33,8 +33,6 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-  private MobileServiceTable<TodoItem> mToDoTable;
-
   public static MobileServiceClient mClient;
   public static final String MESSAGE_AUTH = "eu.mhutti1.chat.MESSAGE_AUTH";
   public static final String MESSAGE_NICK = "eu.mhutti1.chat.MESSAGE_NICK";
@@ -183,11 +181,6 @@ public class MainActivity extends AppCompatActivity {
         toast.show();
       }
     });
-  }
-
-  public class TodoItem {
-    public String Id;
-    public String Text;
   }
 
   public class User {

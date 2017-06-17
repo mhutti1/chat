@@ -40,9 +40,9 @@ public class ChatAdapter extends ArrayAdapter<Message> {
       TextView textView = (TextView) view.findViewById(R.id.message_textview);
       textView.setText(message.text);
       if (message.sender.equals(Utils.myId(getContext()))) {
-        textView.setGravity(Gravity.START);
+        textView.setGravity(Gravity.START); // Local sender
       } else {
-        textView.setGravity(Gravity.END);
+        textView.setGravity(Gravity.END); // Remove sender
       }
     }
     return view;
